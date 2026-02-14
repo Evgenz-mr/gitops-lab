@@ -1,0 +1,23 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: gitops-lab
+  namespace: argocd
+spec:
+  description: GitOps Lab Project
+  sourceRepos:
+    - '*'  # Для лабы разрешаем все; в продакшене — только свои репозитории
+  destinations:
+    - namespace: 'gitops-lab-*'
+      server: 'https://kubernetes.default.svc'
+  clusterResourceWhitelist:
+    - group: '*'
+      kind: '*'
+  namespaceResourceWhitelist:
+    - group: '*'
+      kind: '*'
+  roles:
+    - name: readonly
+      description: Read-only access
+      policies:
+        - p, proj:gitops-lab:readonly, applications, get, gitops-lab/*, allow

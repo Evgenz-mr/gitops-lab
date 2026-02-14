@@ -1,0 +1,50 @@
+name: Build and Push Image
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'app/**'
+      - '.github/workflows/ci.yaml'
+
+env:
+  REGISTRY: localhost:32000  # Для локального MicroK8s registry
+  IMAGE_NAME: my-app
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Нужен полный хэш коммита
+
+      - name: Set up QEMU (для мультиархитектурных образов)
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to local registry (MicroK8s)
+        run: |
+          # Для локального обучения — пушим в локальный registry
+          # В продакшене заменить на ghcr.io или ваш приватный registry
+          echo "Настроено для локального MicroK8s registry"
+          docker login ${{ env.REGISTRY }} --username admin --password admin || true
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./app
+          push: false  # Для локального обучения не пушим; в продакшене — true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          build-args: |
+            GIT_COMMIT=${{ github.sha }}
+
+      - name: Save image for local load (MicroK8s)
+        if: always()
+        run: |
+          docker save ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} -o image.tar
+          echo "Образ сохранен в image.tar — загрузите его в MicroK8s:"
+          echo "microk8s ctr image import image.tar"

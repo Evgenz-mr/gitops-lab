@@ -1,0 +1,12 @@
+apiVersion: v2
+name: my-app
+description: GitOps Lab Application
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+home: https://github.com/Evgenz-mr/gitops-lab
+sources:
+  - https://github.com/Evgenz-mr/gitops-lab
+maintainers:
+  - name: Evgen
+    email: evgen@test.com

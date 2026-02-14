@@ -1,0 +1,33 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: my-app-dev
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io  # Защита от удаления без очистки ресурсов
+spec:
+  project: gitops-lab
+  source:
+    repoURL: https://github.com/Evgenz-mr/gitops-lab.git
+    targetRevision: HEAD
+    path: charts/my-app
+    helm:
+      valueFiles:
+        - values.yaml
+        - values-dev.yaml
+      parameters:
+        - name: image.tag
+          value: $ARGOCD_APP_REVISION  # Автоматическая подстановка хэша коммита
+        - name: env.GIT_COMMIT
+          value: $ARGOCD_APP_REVISION
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: gitops-lab-dev
+  syncPolicy:
+    automated:
+      selfHeal: true   # Автоматически восстанавливать желаемое состояние
+      prune: true      # Удалять ресурсы, исчезнувшие из Git
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true

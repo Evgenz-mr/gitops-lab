@@ -1,0 +1,16 @@
+# values-dev.yaml — специфичные настройки для окружения dev
+replicaCount: 1
+
+image:
+  pullPolicy: Always  # Всегда тянуть свежий образ в dev
+
+resources:
+  requests:
+    memory: "32Mi"
+    cpu: "25m"
+  limits:
+    memory: "64Mi"
+    cpu: "100m"
+
+hpa:
+  enabled: false  # В dev не нужен автоскейлинг
