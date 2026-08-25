@@ -1,0 +1,34 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: python-canary
+  namespace: gitops-demo
+spec:
+  replicas: 4
+  revisionHistoryLimit: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: python-canary
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: python-canary
+    spec:
+      containers:
+        - name: python
+          image: ghcr.io/evgenz-mr/gitops-python-api:latest
+          ports:
+            - containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+  strategy:
+    canary:
+      steps:
+        - setWeight: 20
+        - pause:
+            duration: 30s
+        - setWeight: 50
+        - pause: {}
+        - setWeight: 100

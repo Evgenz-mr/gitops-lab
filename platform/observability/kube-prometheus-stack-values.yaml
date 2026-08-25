@@ -1,0 +1,28 @@
+grafana:
+  enabled: true
+  defaultDashboardsEnabled: true
+  adminPassword: ${GRAFANA_ADMIN_PASSWORD}
+  persistence:
+    enabled: false
+
+prometheus:
+  prometheusSpec:
+    retention: 24h
+    resources:
+      requests:
+        cpu: 200m
+        memory: 512Mi
+      limits:
+        cpu: 1000m
+        memory: 2Gi
+
+alertmanager:
+  enabled: true
+  alertmanagerSpec:
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+
+kubeEtcd:
+  enabled: false
