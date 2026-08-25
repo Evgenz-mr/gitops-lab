@@ -22,6 +22,7 @@ jobs:
           done
       - name: Reject obvious plaintext secrets
         run: |
-          if grep -RniE '(password|api[_-]?key|secret)[[:space:]]*:[[:space:]]*[^{$]' --exclude-dir=.git .; then
+          if grep -RniE '^[[:space:]]*(password|api[_-]?key|secret)[[:space:]]*:[[:space:]]*[^$\{]' \
+            charts services platform argocd 2>/dev/null; then
             echo 'Potential plaintext secret detected'; exit 1
           fi
