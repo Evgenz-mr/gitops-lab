@@ -15,7 +15,7 @@ spec:
           address: http://kube-prometheus-stack-prometheus.monitoring.svc:9090
           query: |
             1 - (
-              sum(rate(http_requests_total{status=~"5..",service="python"}[2m]))
+              sum(rate(http_requests_total{status=~"5.."}[2m]))
               /
-              clamp_min(sum(rate(http_requests_total{service="python"}[2m])), 0.001)
+              clamp_min(sum(rate(http_requests_total[2m])), 0.001)
             )
