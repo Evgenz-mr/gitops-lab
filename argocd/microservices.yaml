@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: gitops-demo
+---
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: demo-microservices
+  namespace: argocd
+spec:
+  generators:
+    - list:
+        elements:
+          - service: nginx
+          - service: python
+          - service: java
+  template:
+    metadata:
+      name: '{{service}}'
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/Evgenz-mr/gitops-lab.git
+        targetRevision: main
+        path: charts/microservice
+        helm:
+          valueFiles:
+            - ../../services/{{service}}/values.yaml
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: gitops-demo
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
