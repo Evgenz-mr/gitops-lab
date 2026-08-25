@@ -1,0 +1,30 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: gitops-demo-slo
+  namespace: monitoring
+spec:
+  groups:
+    - name: gitops-demo.rules
+      rules:
+        - alert: GitOpsDemoHighErrorRate
+          expr: |
+            sum(rate(http_requests_total{status=~"5.."}[5m]))
+            /
+            clamp_min(sum(rate(http_requests_total[5m])), 0.001)
+            > 0.05
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: Demo API error rate is above 5%
+            runbook_url: docs/runbooks/high-error-rate.md
+        - alert: GitOpsDemoHighLatency
+          expr: |
+            histogram_quantile(0.95,
+              sum by (le) (rate(http_request_duration_seconds_bucket[5m]))) > 0.5
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: Python API p95 latency is above 500ms
