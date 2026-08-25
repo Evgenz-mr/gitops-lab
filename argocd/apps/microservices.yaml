@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: microservices-appset
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Evgenz-mr/gitops-lab.git
+    targetRevision: main
+    path: argocd
+    directory:
+      include: microservices.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

@@ -1,0 +1,19 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: progressive-delivery
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Evgenz-mr/gitops-lab.git
+    targetRevision: main
+    path: platform/progressive-delivery
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: gitops-demo
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions: [CreateNamespace=true]
