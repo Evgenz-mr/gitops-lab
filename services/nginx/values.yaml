@@ -1,0 +1,17 @@
+image:
+  repository: nginx
+  tag: 1.27-alpine
+containerPort: 80
+service:
+  port: 80
+podSecurityContext:
+  runAsNonRoot: false
+probes:
+  liveness:
+    path: /
+    initialDelaySeconds: 5
+    periodSeconds: 10
+  readiness:
+    path: /
+    initialDelaySeconds: 2
+    periodSeconds: 5

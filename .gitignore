@@ -1,0 +1,8 @@
+.idea/
+.vscode/
+.DS_Store
+*.iml
+.env
+*.tfstate
+*.tfstate.*
+.terraform/
