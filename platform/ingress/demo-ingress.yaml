@@ -1,0 +1,38 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: gitops-demo
+  namespace: gitops-demo
+  annotations:
+    cert-manager.io/cluster-issuer: selfsigned-lab
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - gitops.local
+      secretName: gitops-demo-tls
+  rules:
+    - host: gitops.local
+      http:
+        paths:
+          - path: /nginx
+            pathType: Prefix
+            backend:
+              service:
+                name: nginx
+                port:
+                  number: 80
+          - path: /python
+            pathType: Prefix
+            backend:
+              service:
+                name: python
+                port:
+                  number: 8080
+          - path: /java
+            pathType: Prefix
+            backend:
+              service:
+                name: java
+                port:
+                  number: 8080

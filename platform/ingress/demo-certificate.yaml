@@ -1,0 +1,12 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: gitops-demo-tls
+  namespace: gitops-demo
+spec:
+  secretName: gitops-demo-tls
+  issuerRef:
+    name: selfsigned-lab
+    kind: ClusterIssuer
+  dnsNames:
+    - gitops.local

@@ -1,0 +1,9 @@
+# Example lab values for Tempo. Persistent storage should be configured for non-ephemeral use.
+tempo:
+  retention: 1h
+persistence:
+  enabled: false
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi

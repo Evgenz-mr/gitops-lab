@@ -1,0 +1,12 @@
+# Example small-lab Loki values. Review the current OSS chart repository and storage model before use.
+deploymentMode: SingleBinary
+loki:
+  auth_enabled: false
+  commonConfig:
+    replication_factor: 1
+  storage:
+    type: filesystem
+singleBinary:
+  replicas: 1
+  persistence:
+    enabled: false

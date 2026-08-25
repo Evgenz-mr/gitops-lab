@@ -1,0 +1,44 @@
+name: platform-validation
+on:
+  pull_request:
+    paths:
+      - 'platform/**'
+      - 'argocd/**'
+      - 'docs/**'
+      - '.github/workflows/platform-validation.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'platform/**'
+      - 'argocd/**'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install YAML parser
+        run: pip install pyyaml
+      - name: Parse platform YAML
+        run: |
+          python - <<'PY'
+          import pathlib, yaml
+          roots = [pathlib.Path('platform'), pathlib.Path('argocd')]
+          files = []
+          for root in roots:
+              files += list(root.rglob('*.yaml')) + list(root.rglob('*.yml'))
+          for path in files:
+              with path.open(encoding='utf-8') as f:
+                  list(yaml.safe_load_all(f))
+              print(f'validated {path}')
+          PY
+      - name: Check required NetworkPolicy fields
+        run: |
+          grep -q 'kind: NetworkPolicy' platform/networking/default-deny.yaml
+          grep -q 'policyTypes:' platform/networking/default-deny.yaml
+      - name: Verify no committed provider credentials
+        run: |
+          ! grep -RniE '(aws_secret_access_key|private_key:|client_secret:|password: [^$])' platform/secrets platform/ingress

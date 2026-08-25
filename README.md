@@ -1,61 +1,98 @@
-# Production-like GitOps Kubernetes Lab
+# Production-like GitOps Kubernetes Platform Lab
 
-A hands-on platform engineering lab demonstrating GitOps delivery of a small microservice suite with Argo CD, Helm and Kubernetes.
+A hands-on Senior DevOps / Platform Engineering portfolio project demonstrating GitOps delivery, security controls, observability and progressive delivery on Kubernetes.
 
 ## Architecture
 
 ```text
-Developer -> GitHub -> CI validation -> Git repository
-                                      |
-                                      v
-                                   Argo CD
-                                      |
-                                      v
-                                  Kubernetes
-                         +------------+------------+
-                         |            |            |
-                       nginx        python        java
+Developer
+   |
+   v
+GitHub -> CI validation / image build / security scan
+   |
+   v
+Argo CD ------------------------------+
+   |                                  |
+   v                                  v
+Kubernetes                         Platform services
+   |                                  |
+   +-- nginx                           +-- cert-manager
+   +-- python                          +-- External Secrets Operator
+   +-- java                            +-- kube-prometheus-stack
+   |                                  +-- Loki / Tempo examples
+   +-- Ingress + TLS                   +-- Argo Rollouts
+   +-- NetworkPolicies                 +-- Grafana / Alerting
+   +-- HPA / PDB
 ```
 
 ## What this repository demonstrates
 
 - GitOps reconciliation with Argo CD
-- Reusable Helm chart for multiple services
+- reusable Helm chart for several runtimes
 - NGINX, Python and Java test microservices
-- Kubernetes probes, resources and security contexts
-- HorizontalPodAutoscaler and PodDisruptionBudget support
-- CI validation for Helm and Kubernetes manifests
-- Secret scanning and configuration checks
-- Architecture Decision Records (ADR)
-- Separation between application, platform and GitOps configuration
+- readiness/liveness probes, resources, HPA and PDB
+- ingress and TLS patterns with cert-manager
+- default-deny and least-privilege NetworkPolicy examples
+- External Secrets Operator integration pattern
+- Prometheus/Grafana monitoring with Loki/Tempo extension examples
+- progressive delivery with Argo Rollouts
+- CI validation and secret/configuration checks
+- Architecture Decision Records and operational documentation
 
 ## Repository structure
 
 ```text
-app/                         application examples
-argocd/                      Argo CD configuration
-charts/microservice/         reusable Helm chart
-services/nginx/              NGINX test service
-services/python/             Python HTTP service
-services/java/               Java Spring Boot service
+argocd/                      Argo CD applications and ApplicationSets
+charts/microservice/         reusable workload Helm chart
+services/                    NGINX / Python / Java workloads
+platform/
+  networking/                NetworkPolicies
+  ingress/                   cert-manager/TLS examples
+  secrets/                   External Secrets integration
+  observability/             Prometheus, Loki and Tempo values/examples
+  progressive-delivery/      Argo Rollouts examples
+docs/
+  adr/                       architecture decisions
+  architecture.md            platform architecture
+  runbooks/                  operations guidance
 infra/                       local Kubernetes bootstrap
 .github/workflows/           CI validation
-docs/adr/                    architecture decisions
 ```
+
+## GitOps flow
+
+1. Developer changes source, Helm values or platform configuration.
+2. CI validates charts/manifests and performs security-oriented checks.
+3. The change is merged into `main`.
+4. Argo CD detects desired-state drift and reconciles Kubernetes.
+5. Health probes, metrics and alerts expose runtime state.
+6. Progressive delivery canary steps provide a controlled rollout path.
 
 ## Test microservices
 
 | Service | Runtime | Port | Purpose |
 |---|---|---:|---|
-| nginx | NGINX | 80 | Static frontend / ingress test |
-| python | Python + Flask | 8080 | Lightweight API and health test |
-| java | Java + Spring Boot | 8080 | JVM workload and readiness test |
+| nginx | NGINX | 80 | ingress, TLS and static workload testing |
+| python | Python + Flask | 8080 | lightweight API and health testing |
+| java | Java + Spring Boot | 8080 | JVM workload, actuator and readiness testing |
 
-All three services are deployed from the same reusable Helm chart with separate values files. This makes the repository useful for testing Argo CD synchronization, self-healing, image changes and multi-service rollouts.
+## Platform components
+
+The `platform/` directory contains production-oriented integration examples. Cluster-scoped controllers such as cert-manager and External Secrets Operator should be installed once per cluster and are deliberately separated from application charts. Review and pin component versions before using these examples outside a lab.
+
+## Security model
+
+The lab demonstrates non-root workloads where possible, dropped Linux capabilities, disabled privilege escalation, NetworkPolicies, secret-manager integration patterns and CI checks. No real credentials are stored in Git.
+
+## Observability
+
+`kube-prometheus-stack` provides Prometheus Operator, Prometheus, Alertmanager and Grafana. Loki/Tempo examples show how logs and traces can be layered on top. See `docs/runbooks/` for operational response examples.
+
+## Progressive delivery
+
+`platform/progressive-delivery/` contains an Argo Rollouts canary example with staged traffic percentages and manual pause points. This is intentionally separate from the default Deployment-based chart so both standard and progressive rollout patterns remain easy to compare.
 
 ## Quick start
-
-Prerequisites: Ubuntu 22.04/24.04, 4+ GB RAM, Docker and MicroK8s.
 
 ```bash
 ./infra/microk8s-setup.sh
@@ -64,34 +101,12 @@ microk8s kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/a
 microk8s kubectl apply -f argocd/microservices.yaml
 ```
 
-Check applications:
-
-```bash
-microk8s kubectl get applications -n argocd
-microk8s kubectl get pods -n gitops-demo
-```
-
-## GitOps workflow
-
-1. Developer changes application or Helm values.
-2. Pull request CI validates YAML, Helm templates and security-sensitive configuration.
-3. Change is merged to `main`.
-4. Argo CD detects Git drift.
-5. Argo CD synchronizes the desired state into Kubernetes.
-6. Automated self-healing restores resources when live state differs from Git.
-
-## Production-oriented practices
-
-The lab intentionally keeps infrastructure small, but demonstrates patterns expected in larger environments: declarative desired state, reusable charts, least-privilege container settings, health probes, resource requests/limits, autoscaling hooks, disruption budgets and automated validation.
-
-## Security
-
-The default chart supports non-root workloads where the container image permits it, drops Linux capabilities, disables privilege escalation, and uses read-only root filesystems selectively through values. CI includes secret scanning and Helm/YAML validation. Production environments should additionally use an external secrets solution, signed images, admission policies and network policies appropriate to the CNI.
+Optional platform components are documented in `platform/README.md`.
 
 ## Design decisions
 
-See [`docs/adr`](docs/adr/) for short Architecture Decision Records explaining why Argo CD and a reusable Helm chart are used.
+See `docs/adr/` for Architecture Decision Records covering GitOps, reusable Helm charts, platform controllers, secrets and observability.
 
-## Known limitations
+## Scope
 
-This repository is a portfolio/lab environment rather than a production distribution. Image registry credentials, TLS, external secrets, persistent observability backends and cloud infrastructure are intentionally environment-specific and are not hard-coded into the repository.
+This is a portfolio/lab project, not a drop-in production distribution. Cloud-specific storage classes, DNS, ACME issuer configuration, external secret providers and long-term observability storage are intentionally environment-specific.
